@@ -16,12 +16,15 @@
 
 package org.deeplearning4j.ui.stats;
 
+import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.bytedeco.javacpp.Pointer;
 import org.deeplearning4j.api.storage.StatsStorageRouter;
 import org.deeplearning4j.api.storage.StorageMetaData;
 import org.deeplearning4j.api.storage.listener.RoutingIterationListener;
+import org.deeplearning4j.eval.Evaluation;
 import org.deeplearning4j.nn.api.Layer;
 import org.deeplearning4j.nn.api.Model;
 import org.deeplearning4j.nn.conf.NeuralNetConfiguration;
@@ -69,6 +72,10 @@ public abstract class BaseStatsListener implements RoutingIterationListener {
     private StatsUpdateConfiguration updateConfig;
     private String sessionID;
     private String workerID;
+    private Evaluation evaluation;
+
+
+
 
     private transient List<GarbageCollectorMXBean> gcBeans;
     private Map<String, Pair<Long, Long>> gcStatsAtLastReport;
@@ -340,6 +347,10 @@ public abstract class BaseStatsListener implements RoutingIterationListener {
 
         StatsReport report = getNewStatsReport();
         report.reportIDs(getSessionID(model), TYPE_ID, workerID, System.currentTimeMillis()); //TODO support NTP time
+        if(evaluation != null){
+            log.info("###Reporting evalstats through BaseStatsListener...{}", evaluation);
+            report.reportEvalStats(evaluation);
+        }
 
         //--- Performance and System Stats ---
         if (updateConfig.collectPerformanceStats()) {
@@ -797,4 +808,9 @@ public abstract class BaseStatsListener implements RoutingIterationListener {
 
     @Override
     public abstract BaseStatsListener clone();
+
+    public void evaluationDone(Evaluation evaluation){
+        this.evaluation = evaluation;
+
+    }
 }

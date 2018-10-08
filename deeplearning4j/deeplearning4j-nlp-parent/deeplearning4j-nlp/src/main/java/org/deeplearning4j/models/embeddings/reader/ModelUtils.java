@@ -53,7 +53,7 @@ public interface ModelUtils<T extends SequenceElement> {
      * where the first word is the query word, the next 2 words are negative,
      * and the last word is the predicted word to be nearest
      * @param questions the questions to ask
-     * @return the accuracy based on these questions
+     * @return the evaluation based on these questions
      */
     Map<String, Double> accuracy(List<String> questions);
 
@@ -62,7 +62,7 @@ public interface ModelUtils<T extends SequenceElement> {
      * Find all words with a similar characters
      * in the vocab
      * @param word the word to compare
-     * @param accuracy the accuracy: 0 to 1
+     * @param accuracy the evaluation: 0 to 1
      * @return the list of words that are similar in the vocab
      */
     List<String> similarWordsInVocabTo(String word, double accuracy);

@@ -25,7 +25,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>deeplearning4j-play_2.11</artifactId>
+    <artifactId>deeplearning4j-play_2.12-snapshot</artifactId>
     <name>deeplearning4j-play</name>
 
     <properties>
@@ -110,7 +110,7 @@
     <dependencies>
         <dependency>
             <groupId>org.deeplearning4j</groupId>
-            <artifactId>deeplearning4j-ui-model</artifactId>
+            <artifactId>deeplearning4j-ui-model-snapshot</artifactId>
             <version>${project.version}</version>
         </dependency>
 

@@ -1,0 +1,14 @@
+evaluation.overview.chart.epoch=Epoch
+evaluation.overview.chart.accuracy=Accuracy
+evaluation.overview.chart.precision=Precision
+evaluation.overview.chart.recall=Recall
+evaluation.overview.chart.f1=F-1
+evaluation.overview.chart.accuracyTitle=Model Accuracy vs. Epoch
+evaluation.overview.chart.accuracyTitleShort=Accuracy
+evaluation.overview.chart.precisionTitle=Model Precision vs. Epoch
+evaluation.overview.chart.precisionTitleShort=Precision
+evaluation.overview.chart.recallTitle=Model Recall vs. Epoch
+evaluation.overview.chart.recallTitleShort=Recall
+evaluation.overview.chart.f1Title=Model F-1 vs. Epoch
+evaluation.overview.chart.f1TitleShort=F-1
+evaluation.nav.overview=Evaluation

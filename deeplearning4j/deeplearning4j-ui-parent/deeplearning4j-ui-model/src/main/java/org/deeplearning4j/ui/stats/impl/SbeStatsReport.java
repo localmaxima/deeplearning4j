@@ -16,6 +16,7 @@
 
 package org.deeplearning4j.ui.stats.impl;
 
+import com.google.common.base.Joiner;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -24,6 +25,8 @@ import org.agrona.DirectBuffer;
 import org.agrona.MutableDirectBuffer;
 import org.agrona.concurrent.UnsafeBuffer;
 import org.apache.commons.io.IOUtils;
+import org.deeplearning4j.eval.ConfusionMatrix;
+import org.deeplearning4j.eval.Evaluation;
 import org.deeplearning4j.ui.stats.api.Histogram;
 import org.deeplearning4j.ui.stats.api.StatsReport;
 import org.deeplearning4j.ui.stats.api.StatsType;
@@ -35,6 +38,7 @@ import org.nd4j.linalg.primitives.Pair;
 import java.io.*;
 import java.nio.ByteBuffer;
 import java.util.*;
+import java.util.List;
 
 /**
  * An implementation of {@link StatsReport} using Simple Binary Encoding (SBE)
@@ -45,6 +49,7 @@ import java.util.*;
 @ToString
 @Data
 public class SbeStatsReport implements StatsReport, AgronaPersistable {
+    public int encodingLengthBytes;
     private String sessionID;
     private String typeID;
     private String workerID;
@@ -83,6 +88,15 @@ public class SbeStatsReport implements StatsReport, AgronaPersistable {
     private boolean scorePresent;
     private boolean memoryUsePresent;
     private boolean performanceStatsPresent;
+
+    private Evaluation evalStats;
+    private boolean evalStatsPresent;
+    private double accuracy;
+    private double precision;
+    private double recall;
+    private double f1;
+    private List<String> labels;
+    private int [][] confusionMatrix;
 
     public SbeStatsReport() {
         //No-Arg constructor only for deserialization
@@ -318,6 +332,14 @@ public class SbeStatsReport implements StatsReport, AgronaPersistable {
         return dataSetMetaData != null || metaDataClassName != null;
     }
 
+    @Override
+    public void reportEvalStats(Evaluation evalStats) {
+        this.evalStats = evalStats;
+        this.evalStatsPresent = true;
+    }
+
+
+
     private Map<String, Double> mapForTypes(StatsType statsType, SummaryType summaryType) {
         switch (summaryType) {
             case Mean:
@@ -487,6 +509,7 @@ public class SbeStatsReport implements StatsReport, AgronaPersistable {
             }
         }
 
+
         //Param names group
         bufferSize += 4; //Header; always present
         List<String> paramNames = getParamNames();
@@ -522,11 +545,21 @@ public class SbeStatsReport implements StatsReport, AgronaPersistable {
         byte[] bSessionID = SbeUtil.toBytes(true, sessionID);
         byte[] bTypeID = SbeUtil.toBytes(true, typeID);
         byte[] bWorkerID = SbeUtil.toBytes(true, workerID);
+
         bufferSize += bSessionID.length + bTypeID.length + bWorkerID.length;
 
         //Metadata class name:
         byte[] metaDataClassNameBytes = SbeUtil.toBytes(true, metaDataClassName);
         bufferSize += metaDataClassNameBytes.length;
+
+        //evalstats
+        if(evalStatsPresent){
+            String labelsAsString = Joiner.on("#").join(evalStats.getLabelsList());
+            bufferSize += 4 + labelsAsString.length(); // 4 header + str length
+            bufferSize += 4 + 4 + 32 ; // 4 for GroupSizeEncodingDecoder + 4 for header length + 32 for  4 doubles
+            int nClasses = evalStats.getConfusion().getClasses().size();
+            bufferSize += 4 + (4 * nClasses * nClasses); //4 header  + nClasses squared * 4 bytes
+        }
 
         return bufferSize;
     }
@@ -624,7 +657,9 @@ public class SbeStatsReport implements StatsReport, AgronaPersistable {
 
     @Override
     public byte[] encode() {
-        byte[] bytes = new byte[encodingLengthBytes()];
+        System.out.println("Before encoding: eval stats in Stats report are:" + getEvalStats());
+        encodingLengthBytes = encodingLengthBytes();
+        byte[] bytes = new byte[encodingLengthBytes];
         MutableDirectBuffer buffer = new UnsafeBuffer(bytes);
         encode(buffer);
         return bytes;
@@ -667,7 +702,8 @@ public class SbeStatsReport implements StatsReport, AgronaPersistable {
                         .meanMagnitudeActivations(meanMagnitudeValues != null
                                         && meanMagnitudeValues.containsKey(StatsType.Activations))
                         .learningRatesPresent(learningRatesByParam != null)
-                        .dataSetMetaDataPresent(hasDataSetMetaData());
+                        .dataSetMetaDataPresent(hasDataSetMetaData())
+                        .evalStatsPresent(evalStatsPresent);
 
         ue.statsCollectionDuration(statsCollectionDurationMs).score(score);
 
@@ -895,10 +931,43 @@ public class SbeStatsReport implements StatsReport, AgronaPersistable {
             }
         }
 
+        // +++ Eval stats+++
+        System.out.println("##Encoding, evalStatsPresent is "+ evalStatsPresent);
+        if(evalStatsPresent){
+            UpdateEncoder.EvaluationEncoder ese =  ue.evalStats(4);
+            ese.putAccuracy(evalStats.accuracy());
+            ese.putPrecision(evalStats.precision());
+            ese.putRecall(evalStats.recall());
+            ese.putF1(evalStats.f1());
+
+            String labelsAsString = Joiner.on("#").join(evalStats.getLabelsList());
+            int strLength = labelsAsString.length();
+            UpdateEncoder.EvaluationEncoder.LabelsNamesEncoder labelsNamesEncoder = ese.labelsNamesEncoder(strLength);
+            labelsNamesEncoder.putLabels(labelsAsString);
+
+            //a squared matrix of elements
+            ConfusionMatrix<Integer> confusion = evalStats.getConfusion();
+            int nClasses = confusion.getClasses().size();
+            final int numElements = nClasses * nClasses;
+            int [] [] matrix = new int[nClasses][nClasses];
+            for(int i =0;i<nClasses;i++){
+                for(int j =0;j<nClasses;j++){
+                    matrix[i][j] = confusion.getCount(i, j);
+                }
+            }
+
+            UpdateEncoder.EvaluationEncoder.ConfusionMatrixEncoder confusionMatrixEncoder =
+                    ese.confusionMatrixEncoder(numElements);
+            confusionMatrixEncoder.putMartix(matrix);
+
+        }
+
+
         //Session/worker IDs
         byte[] bSessionID = SbeUtil.toBytes(true, sessionID);
         byte[] bTypeID = SbeUtil.toBytes(true, typeID);
         byte[] bWorkerID = SbeUtil.toBytes(true, workerID);
+
         ue.putSessionID(bSessionID, 0, bSessionID.length);
         ue.putTypeID(bTypeID, 0, bTypeID.length);
         ue.putWorkerID(bWorkerID, 0, bWorkerID.length);
@@ -906,6 +975,7 @@ public class SbeStatsReport implements StatsReport, AgronaPersistable {
         //Class name for DataSet metadata
         byte[] metaDataClassNameBytes = SbeUtil.toBytes(true, metaDataClassName);
         ue.putDataSetMetaDataClassName(metaDataClassNameBytes, 0, metaDataClassNameBytes.length);
+
     }
 
     @Override
@@ -927,6 +997,7 @@ public class SbeStatsReport implements StatsReport, AgronaPersistable {
 
     @Override
     public void decode(DirectBuffer buffer) {
+
         //TODO we could do this more efficiently, with buffer re-use, etc.
         MessageHeaderDecoder dec = new MessageHeaderDecoder();
         UpdateDecoder ud = new UpdateDecoder();
@@ -961,6 +1032,7 @@ public class SbeStatsReport implements StatsReport, AgronaPersistable {
         boolean meanMagAct = fpd.meanMagnitudeActivations();
         boolean learningRatesPresent = fpd.learningRatesPresent();
         boolean metaDataPresent = fpd.dataSetMetaDataPresent();
+        evalStatsPresent = fpd.evalStatsPresent();
 
         statsCollectionDurationMs = ud.statsCollectionDuration();
         score = ud.score();
@@ -1151,6 +1223,32 @@ public class SbeStatsReport implements StatsReport, AgronaPersistable {
                 b[i++] = mdbd2.bytes();
             }
             this.dataSetMetaData.add(b);
+        }
+
+        System.out.println("##Decoding, evalStatsPresent is "+ evalStatsPresent);
+        if(evalStatsPresent){
+            UpdateDecoder.EvalStatsDecoder esd = ud.evalStats();
+            this.accuracy = esd.getAccuracy();
+            //System.out.println("##Accuracy is "+ esd.getAccuracy());
+            this.precision = esd.getPrecision();
+            //System.out.println("##Precision is "+ esd.getPrecision());
+            this.recall = esd.getRecall();
+            //System.out.println("##Recall is "+ esd.getRecall());
+            this.f1 = esd.getF1();
+            //System.out.println("##F1-score is "+ esd.getF1());
+
+            UpdateDecoder.EvalStatsDecoder.LabelsNamesDecoder labelsNamesDecoder = esd.labelsNames();
+            this.labels = Arrays.asList(labelsNamesDecoder.getLabels().split("#"));
+            //System.out.println("##Labels str is "+ labelsNamesDecoder.getLabels());
+
+            UpdateDecoder.EvalStatsDecoder.ConfusionMatrixDecoder confusionMatrixDecoder = esd.confusionMatrix();
+            this.confusionMatrix = confusionMatrixDecoder.getMatrix();
+            int nClasses = confusionMatrix.length;
+            /*for(int i =0;i<nClasses;i++){
+                for(int j =0;j<nClasses;j++){
+                    System.out.println(confusionMatrix[i][j]);
+                }
+            }*/
         }
 
         //IDs

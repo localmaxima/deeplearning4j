@@ -28,7 +28,6 @@ import play.mvc.Result;
 import play.mvc.Results;
 
 import javax.xml.bind.DatatypeConverter;
-import java.io.File;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -49,21 +48,21 @@ import static play.mvc.Http.Context.Implicit.request;
 public class RemoteReceiverModule implements UIModule {
 
     private AtomicBoolean enabled = new AtomicBoolean(false);
-    private StatsStorageRouter statsStorage;
+    private StatsStorageRouter statsStorageRouter;
 
     public void setEnabled(boolean enabled) {
         this.enabled.set(enabled);
         if (!enabled) {
-            this.statsStorage = null;
+            this.statsStorageRouter = null;
         }
     }
 
     public boolean isEnabled() {
-        return enabled.get() && this.statsStorage != null;
+        return enabled.get() && this.statsStorageRouter != null;
     }
 
-    public void setStatsStorage(StatsStorageRouter statsStorage) {
-        this.statsStorage = statsStorage;
+    public void setStatsStorageRouter(StatsStorageRouter statsStorageRouter) {
+        this.statsStorageRouter = statsStorageRouter;
     }
 
     @Override
@@ -104,7 +103,7 @@ public class RemoteReceiverModule implements UIModule {
                             "UI server remote listening is currently disabled. Use UIServer.getInstance().enableRemoteListener()");
         }
 
-        if (statsStorage == null) {
+        if (statsStorageRouter == null) {
             return Results.internalServerError(
                             "UI Server remote listener: no StatsStorage instance is set/available to store results");
         }
@@ -124,23 +123,30 @@ public class RemoteReceiverModule implements UIModule {
         String dc = dataClass.asText();
         String content = data.asText();
 
+        //log.info("###details dc: {}", dc );
+        //log.info("###routertype:" + statsStorageRouter.getClass().getName());
+        //log.info("###type:" + type.asText());
+       // String s = new String(DatatypeConverter.parseBase64Binary(content));
+        //log.info("###Mydata starts {} ###Mydata ends" , s);
+
         switch (type.asText().toLowerCase()) {
             case "metadata":
                 StorageMetaData meta = getMetaData(dc, content);
                 if (meta != null) {
-                    statsStorage.putStorageMetaData(meta);
+                    statsStorageRouter.putStorageMetaData(meta);
                 }
                 break;
             case "staticinfo":
                 Persistable staticInfo = getPersistable(dc, content);
                 if (staticInfo != null) {
-                    statsStorage.putStaticInfo(staticInfo);
+                    statsStorageRouter.putStaticInfo(staticInfo);
                 }
                 break;
             case "update":
                 Persistable update = getPersistable(dc, content);
                 if (update != null) {
-                    statsStorage.putUpdate(update);
+
+                    statsStorageRouter.putUpdate(update);
                 }
                 break;
             default:
@@ -179,6 +185,7 @@ public class RemoteReceiverModule implements UIModule {
     }
 
     private Persistable getPersistable(String dataClass, String content) {
+
         Persistable p;
         try {
             Class<?> c = Class.forName(dataClass);
@@ -196,6 +203,7 @@ public class RemoteReceiverModule implements UIModule {
 
         try {
             byte[] bytes = DatatypeConverter.parseBase64Binary(content);
+
             p.decode(bytes);
         } catch (Exception e) {
             log.warn("Skipping invalid remote data: exception encountered when deserializing data", e);

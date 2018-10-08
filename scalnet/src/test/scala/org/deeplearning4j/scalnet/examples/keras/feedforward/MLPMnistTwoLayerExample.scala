@@ -59,6 +59,6 @@ object MLPMnistTwoLayerExample extends App with Logging {
   model.fit(mnistTrain, epochs, List(new ScoreIterationListener(scoreFrequency)))
 
   logger.info("Evaluate model...")
-  logger.info(s"Train accuracy = ${model.evaluate(mnistTrain).accuracy}")
-  logger.info(s"Test accuracy = ${model.evaluate(mnistTest).accuracy}")
+  logger.info(s"Train evaluation = ${model.evaluate(mnistTrain).accuracy}")
+  logger.info(s"Test evaluation = ${model.evaluate(mnistTest).accuracy}")
 }

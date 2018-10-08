@@ -265,7 +265,8 @@ public class SbeStatsInitializationReport implements StatsInitializationReport, 
 
     @Override
     public byte[] encode() {
-        byte[] bytes = new byte[encodingLengthBytes()];
+        int encodingLengthBytes = encodingLengthBytes();
+        byte[] bytes = new byte[encodingLengthBytes];
         MutableDirectBuffer buffer = new UnsafeBuffer(bytes);
         encode(buffer);
         return bytes;

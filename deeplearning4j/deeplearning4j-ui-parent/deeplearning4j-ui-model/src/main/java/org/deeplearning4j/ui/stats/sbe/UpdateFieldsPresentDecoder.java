@@ -125,6 +125,10 @@ public class UpdateFieldsPresentDecoder {
         return 0 != (buffer.getInt(offset, java.nio.ByteOrder.LITTLE_ENDIAN) & (1 << 21));
     }
 
+    public boolean evalStatsPresent() {
+        return 0 != (buffer.getInt(offset, java.nio.ByteOrder.LITTLE_ENDIAN) & (1 << 22));
+    }
+
     public String toString() {
         return appendTo(new StringBuilder(100)).toString();
     }

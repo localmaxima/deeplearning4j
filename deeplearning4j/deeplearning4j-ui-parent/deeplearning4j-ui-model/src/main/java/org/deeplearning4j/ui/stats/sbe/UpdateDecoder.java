@@ -2150,6 +2150,287 @@ public class UpdateDecoder {
         }
     }
 
+    private final EvalStatsDecoder evalStats = new EvalStatsDecoder();
+
+
+    public static long evalStatsDecoderId() {
+        return 350;
+    }
+
+    public EvalStatsDecoder evalStats() {
+        evalStats.wrap(parentMessage, buffer);
+        return evalStats;
+    }
+
+
+
+    public static class EvalStatsDecoder{
+        private static final int HEADER_SIZE = 4;
+        private final GroupSizeEncodingDecoder dimensions = new GroupSizeEncodingDecoder();
+        private UpdateDecoder parentMessage;
+        private DirectBuffer buffer;
+        private int blockLength = 8;
+        private int actingVersion;
+        private int count;
+        private int index;
+        private int offset;
+
+        public void wrap(final UpdateDecoder parentMessage, final DirectBuffer buffer) {
+            this.parentMessage = parentMessage;
+            this.buffer = buffer;
+            dimensions.wrap(buffer, parentMessage.limit());
+            blockLength = dimensions.blockLength();
+            count = dimensions.numInGroup();
+            parentMessage.limit(parentMessage.limit() + HEADER_SIZE);
+        }
+
+        public static int sbeHeaderSize() {
+            return HEADER_SIZE;
+        }
+
+        public static int sbeBlockLength() {
+            return 0;
+        }
+
+        public int actingBlockLength() {
+            return blockLength;
+        }
+
+        public int count() {
+            return count;
+        }
+
+        public static int evalStatsId() {
+            return 3100;
+        }
+
+
+        public static int evalStatsHeaderLength() {
+            return 4;
+        }
+
+
+        public double getAccuracy() {
+            final int limit = parentMessage.limit();
+            final double value = buffer.getDouble(limit , java.nio.ByteOrder.LITTLE_ENDIAN);
+            parentMessage.limit(limit + 8);
+            return value;
+        }
+
+        public double getPrecision() {
+            final int limit = parentMessage.limit();
+            final double value = buffer.getDouble(limit, java.nio.ByteOrder.LITTLE_ENDIAN);
+            parentMessage.limit(limit + 8);
+            return value;
+        }
+
+        public double getRecall() {
+            final int limit = parentMessage.limit();
+            final double value = buffer.getDouble(limit , java.nio.ByteOrder.LITTLE_ENDIAN);
+            parentMessage.limit(limit + 8);
+            return value;
+        }
+
+        public double getF1() {
+            final int limit = parentMessage.limit();
+            final double value = buffer.getDouble(limit , java.nio.ByteOrder.LITTLE_ENDIAN);
+            parentMessage.limit(limit + 8);
+            return value;
+        }
+
+
+
+        public String toString() {
+            return appendTo(new StringBuilder(100)).toString();
+        }
+
+        public StringBuilder appendTo(final StringBuilder builder) {
+            builder.append('(');
+            builder.append("evaluation=");
+            builder.append(getAccuracy());
+            builder.append(')');
+            return builder;
+        }
+
+
+        private final LabelsNamesDecoder labelsNamesDecoder = new LabelsNamesDecoder();
+
+        public LabelsNamesDecoder labelsNames() {
+            labelsNamesDecoder.wrap(parentMessage, buffer);
+            return labelsNamesDecoder;
+        }
+        public static class LabelsNamesDecoder{
+            private static final int HEADER_SIZE = 4;
+            private final GroupSizeEncodingDecoder dimensions = new GroupSizeEncodingDecoder();
+            private UpdateDecoder parentMessage;
+            private DirectBuffer buffer;
+            private int blockLength;
+            private int actingVersion;
+            private int count;
+            private int index;
+            private int offset;
+
+            public void wrap(final UpdateDecoder parentMessage, final DirectBuffer buffer) {
+                this.parentMessage = parentMessage;
+                this.buffer = buffer;
+                dimensions.wrap(buffer, parentMessage.limit());
+                blockLength = dimensions.blockLength();
+                count = dimensions.numInGroup();
+                parentMessage.limit(parentMessage.limit() + HEADER_SIZE);
+            }
+
+            public String getLabels(){
+                final int headerLength = 4;
+                final int limit = parentMessage.limit();
+                final int dataLength = (int) (buffer.getInt(limit, java.nio.ByteOrder.LITTLE_ENDIAN) & 0xFFFF_FFFFL);
+                final byte[] tmp = new byte[dataLength];
+                buffer.getBytes(limit + headerLength, tmp, 0, dataLength);
+
+                final String value;
+                try {
+                    value = new String(tmp, "UTF-8");
+                } catch (final java.io.UnsupportedEncodingException ex) {
+                    throw new RuntimeException(ex);
+                }
+
+                parentMessage.limit(limit + headerLength + dataLength);
+                return value;
+            }
+
+            public static int sbeHeaderSize() {
+                return HEADER_SIZE;
+            }
+
+            public static int sbeBlockLength() {
+                return 0;
+            }
+
+            public int actingBlockLength() {
+                return blockLength;
+            }
+
+
+            public static int labelNamesId() {
+                return 3200;
+            }
+
+            public static String labelNamesCharacterEncoding() {
+                return "UTF-8";
+            }
+
+            public static int labelNamesHeaderLength() {
+                return 4;
+            }
+
+            public int labelNamesLength() {
+                final int limit = parentMessage.limit();
+                return (int) (buffer.getInt(limit, java.nio.ByteOrder.LITTLE_ENDIAN) & 0xFFFF_FFFFL);
+            }
+
+
+
+            public String toString() {
+                return appendTo(new StringBuilder(100)).toString();
+            }
+
+            public StringBuilder appendTo(final StringBuilder builder) {
+                builder.append('(');
+                builder.append("labelNames=");
+                builder.append(')');
+                return builder;
+            }
+        }
+
+        private final ConfusionMatrixDecoder confusionMatrixDecoder = new ConfusionMatrixDecoder();
+
+        public ConfusionMatrixDecoder confusionMatrix() {
+            confusionMatrixDecoder.wrap(parentMessage, buffer);
+            return confusionMatrixDecoder;
+        }
+        public static class ConfusionMatrixDecoder{
+            private static final int HEADER_SIZE = 4;
+            private final GroupSizeEncodingDecoder dimensions = new GroupSizeEncodingDecoder();
+            private UpdateDecoder parentMessage;
+            private DirectBuffer buffer;
+            private int blockLength;
+            private int actingVersion;
+            private int count;
+            private int index;
+            private int offset;
+
+            public void wrap(final UpdateDecoder parentMessage, final DirectBuffer buffer) {
+                this.parentMessage = parentMessage;
+                this.buffer = buffer;
+                dimensions.wrap(buffer, parentMessage.limit());
+                blockLength = dimensions.blockLength();
+                count = dimensions.numInGroup();
+                parentMessage.limit(parentMessage.limit() + HEADER_SIZE);
+            }
+
+            public int [][] getMatrix(){
+                int nClasses = (int)Math.sqrt(count);
+                int [][] matrix = new int[nClasses][nClasses];
+                final int limit = parentMessage.limit();
+                int counter = 0;
+
+                for(int i =0;i<nClasses;i++){
+                    for(int j =0;j<nClasses;j++){
+                        matrix[i][j] =
+                                (int) (buffer.getInt(limit + (counter * 4), java.nio.ByteOrder.LITTLE_ENDIAN) & 0xFFFF_FFFFL);
+                        counter++;
+                    }
+                }
+
+                parentMessage.limit(limit + counter * 4);
+
+                return matrix;
+            }
+
+            public static int sbeHeaderSize() {
+                return HEADER_SIZE;
+            }
+
+            public static int sbeBlockLength() {
+                return 0;
+            }
+
+            public int actingBlockLength() {
+                return blockLength;
+            }
+
+
+            public static int labelNamesId() {
+                return 3200;
+            }
+
+            public static String labelNamesCharacterEncoding() {
+                return "UTF-8";
+            }
+
+            public static int labelNamesHeaderLength() {
+                return 4;
+            }
+
+            public int labelNamesLength() {
+                final int limit = parentMessage.limit();
+                return (int) (buffer.getInt(limit, java.nio.ByteOrder.LITTLE_ENDIAN) & 0xFFFF_FFFFL);
+            }
+
+
+
+            public String toString() {
+                return appendTo(new StringBuilder(100)).toString();
+            }
+
+            public StringBuilder appendTo(final StringBuilder builder) {
+                builder.append('(');
+                builder.append("labelNames=");
+                builder.append(')');
+                return builder;
+            }
+        }
+    }
+
     public static int sessionIDId() {
         return 1200;
     }

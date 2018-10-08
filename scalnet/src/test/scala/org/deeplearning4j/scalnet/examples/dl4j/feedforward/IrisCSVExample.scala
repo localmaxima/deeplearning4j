@@ -70,6 +70,6 @@ object IrisCSVExample extends App with Logging {
   model.fit(training_data, epochs, List(new ScoreIterationListener(scoreFrequency)))
 
   logger.info("Evaluate model...")
-  logger.info(s"Train accuracy = ${model.evaluate(training_data).accuracy}")
-  logger.info(s"Test accuracy = ${model.evaluate(test_data).accuracy}")
+  logger.info(s"Train evaluation = ${model.evaluate(training_data).accuracy}")
+  logger.info(s"Test evaluation = ${model.evaluate(test_data).accuracy}")
 }

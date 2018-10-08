@@ -81,11 +81,11 @@
                 <div id="sidebar-left" class="span2">
                     <div class="nav-collapse sidebar-nav">
                         <ul class="nav nav-tabs nav-stacked main-menu">
-                            <li class="active"><a href="javascript:void(0);"><i class="icon-bar-chart"></i><span class="hidden-tablet">@i18n.getMessage("train.nav.overview")</span></a></li>
-                            <li><a href="model"><i class="icon-tasks"></i><span class="hidden-tablet">@i18n.getMessage("train.nav.model")</span></a></li>
-                            <li><a href="../evaluation/overview"><i class="icon-tasks"></i><span class="hidden-tablet">Evaluation</span></a></li>
-                            <li><a href="system"><i class="icon-dashboard"></i><span class="hidden-tablet">@i18n.getMessage("train.nav.system")</span></a></li>
-                            @*<li><a href="help"><i class="icon-star"></i><span class="hidden-tablet">@i18n.getMessage("train.nav.userguide")</span></a></li>*@
+                            <li><a href="../train/overview"><i class="icon-bar-chart"></i> <span class="hidden-tablet">@i18n.getMessage("train.nav.overview")</span></a></li>
+                            <li><a href="../train/model"><i class="icon-tasks"></i><span class="hidden-tablet">@i18n.getMessage("train.nav.model")</span></a></li>
+                            <li class="active"><a href="javascript:void(0);"><i class="icon-tasks"></i> <span class="hidden-tablet">@i18n.getMessage("evaluation.nav.overview")</span></a></li>
+                            <li><a href="../train/system"><i class="icon-dashboard"></i><span class="hidden-tablet">@i18n.getMessage("train.nav.system")</span></a></li>
+                            @*<li><a href="../train/help"><i class="icon-star"></i><span class="hidden-tablet">@i18n.getMessage("train.nav.userguide")</span></a></li>*@
                             <li>
                                 <a class="dropmenu" href="javascript:void(0);"><i class="icon-folder-close-alt"></i><span class="hidden-tablet">@i18n.getMessage("train.nav.language")</span></a>
                                 <ul>
@@ -118,116 +118,82 @@
                     </div>
                 </noscript>
 
-                    <!-- Start Score Chart-->
+
                 <div id="content" class="span10">
 
                     <div class="row-fluid">
-
-                        <div class="box span8">
+                        <!-- Start Accuracy Chart-->
+                        <div class="box span6">
                             <div class="box-header">
-                                <h2><b>@i18n.getMessage("train.overview.chart.scoreTitle")</b></h2>
+                                <h2><b>@i18n.getMessage("evaluation.overview.chart.accuracyTitle")</b></h2>
                             </div>
                             <div class="box-content">
-                                <div id="scoreiterchart" class="center" style="height: 300px;" ></div>
-                                <p id="hoverdata"><b>@i18n.getMessage("train.overview.chart.scoreTitleShort")
-                                    :</b> <span id="y">0</span>, <b>@i18n.getMessage("train.overview.charts.iteration")
-                                    :</b> <span id="x">
+                                <div id="accuracy_chart" class="center" style="height: 300px;" ></div>
+                                <p id="hoverdata_accuracy"><b>@i18n.getMessage("evaluation.overview.chart.accuracyTitleShort")
+                                    :</b> <span id="y_accuracy">0</span>,
+                                    <b>@i18n.getMessage("evaluation.overview.chart.epoch")
+                                    :</b> <span id="x_accuracy">
                                     0</span></p>
                             </div>
                         </div>
-                            <!-- End Score Chart-->
-                            <!-- Start Model Table-->
-                        <div class="box span4">
+                        <!-- End Accuracy Chart-->
+                        <!-- Start F-1 Chart-->
+                        <div class="box span6">
                             <div class="box-header">
-                                <h2><b>@i18n.getMessage("train.overview.perftable.title")</b></h2>
+                                <h2><b>@i18n.getMessage("evaluation.overview.chart.f1Title")</b></h2>
                             </div>
                             <div class="box-content">
-                                <table class="table table-bordered table-striped table-condensed">
-                                    <tr>
-                                        <td>@i18n.getMessage("train.overview.modeltable.modeltype")</td>
-                                        <td id="modelType">Loading...</td>
-                                    </tr>
-                                    <tr>
-                                        <td>@i18n.getMessage("train.overview.modeltable.nLayers")</td>
-                                        <td id="nLayers">Loading...</td>
-                                    </tr>
-                                    <tr>
-                                        <td>@i18n.getMessage("train.overview.modeltable.nParams")</td>
-                                        <td id="nParams">Loading...</td>
-                                    </tr>
-                                    <tr>
-                                        <td>@i18n.getMessage("train.overview.perftable.startTime")</td>
-                                        <td id="startTime">Loading...</td>
-                                    </tr>
-                                    <tr>
-                                        <td>@i18n.getMessage("train.overview.perftable.totalRuntime")</td>
-                                        <td id="totalRuntime">Loading...</td>
-                                    </tr>
-                                    <tr>
-                                        <td>@i18n.getMessage("train.overview.perftable.lastUpdate")</td>
-                                        <td id="lastUpdate">Loading...</td>
-                                    </tr>
-                                    <tr>
-                                        <td>@i18n.getMessage("train.overview.perftable.totalParamUpdates")</td>
-                                        <td id="totalParamUpdates">Loading...</td>
-                                    </tr>
-                                    <tr>
-                                        <td>@i18n.getMessage("train.overview.perftable.updatesPerSec")</td>
-                                        <td id="updatesPerSec">Loading...</td>
-                                    </tr>
-                                    <tr>
-                                        <td>@i18n.getMessage("train.overview.perftable.examplesPerSec")</td>
-                                        <td id="examplesPerSec">Loading...</td>
-                                    </tr>
-                                </table>
+                                <div id="f1_chart" class="center" style="height: 300px;" ></div>
+                                <p id="hoverdata_f1"><b>@i18n.getMessage("evaluation.overview.chart.f1TitleShort")
+                                    :</b> <span id="y_f1">0</span>,
+                                    <b>@i18n.getMessage("evaluation.overview.chart.epoch")
+                                    :</b> <span id="x_f1">
+                                0</span></p>
                             </div>
                         </div>
-                            <!--End Model Table -->
+                        <!-- End F-1 Chart-->
                     </div>
-
 
                     <div class="row-fluid">
-                            <!--Start Ratio Table -->
+                        <!-- Start Precision Chart-->
                         <div class="box span6">
                             <div class="box-header">
-                                <h2><b>@i18n.getMessage("train.overview.chart.updateRatioTitle"): log<sub>10</sub></b></h2>
+                                <h2><b>@i18n.getMessage("evaluation.overview.chart.precisionTitle")</b></h2>
                             </div>
                             <div class="box-content">
-                                <div id="updateRatioChart" class="center" style="height: 300px;" ></div>
-                                <p id="hoverdata"><b>@i18n.getMessage("train.overview.chart.updateRatioTitleShort")
-                                    :</b> <span id="yRatio">0</span>, <b>log<sub>
-                                    10</sub> @i18n.getMessage("train.overview.chart.updateRatioTitleShort")
-                                    :</b> <span id="yLogRatio">0</span>
-                                    , <b>@i18n.getMessage("train.overview.charts.iteration"):</b> <span id="xRatio">
-                                        0</span></p>
+                                <div id="precision_chart" class="center" style="height: 300px;" ></div>
+                                <p id="hoverdata_precision"><b>@i18n.getMessage("evaluation.overview.chart.precisionTitleShort")
+                                    :</b> <span id="y_precision">0</span>,
+                                    <b>@i18n.getMessage("evaluation.overview.chart.epoch")
+                                        :</b> <span id="x_precision">
+                                    0</span></p>
                             </div>
                         </div>
-                            <!--End Ratio Table -->
-                            <!--Start Variance Table -->
+                        <!-- End Precision Chart-->
+                        <!-- Start Recall Chart-->
                         <div class="box span6">
                             <div class="box-header">
-                                <h2><b>@i18n.getMessage("train.overview.chart.stdevTitle"): log<sub>10</sub></b></h2>
-                                <ul class="nav tab-menu nav-tabs" style="position:absolute; margin-top: -11px; right: 22px;">
-                                    <li class="active" id="stdevActivations"><a href="javascript:void(0);" onclick="selectStdevChart('stdevActivations')">@i18n.getMessage("train.overview.chart.stdevBtn.activations")</a></li>
-                                    <li id="stdevGradients"><a href="javascript:void(0);" onclick="selectStdevChart('stdevGradients')">@i18n.getMessage("train.overview.chart.stdevBtn.gradients")</a></li>
-                                    <li id="stdevUpdates"><a href="javascript:void(0);" onclick="selectStdevChart('stdevUpdates')">@i18n.getMessage("train.overview.chart.stdevBtn.updates")</a></li>
-                                </ul>
+                                <h2><b>@i18n.getMessage("evaluation.overview.chart.recallTitle")</b></h2>
                             </div>
                             <div class="box-content">
-                                <div id="stdevChart" class="center" style="height: 300px;" ></div>
-                                <p id="hoverdata"><b>@i18n.getMessage("train.overview.chart.stdevTitleShort")
-                                    :</b> <span id="yStdev">0</span>, <b>log<sub>
-                                    10</sub> @i18n.getMessage("train.overview.chart.stdevTitleShort")
-                                    :</b> <span id="yLogStdev">0</span>
-                                    , <b>@i18n.getMessage("train.overview.charts.iteration"):</b> <span id="xStdev">
-                                        0</span></p>
+                                <div id="recall_chart" class="center" style="height: 300px;" ></div>
+                                <p id="hoverdata_recall"><b>@i18n.getMessage("evaluation.overview.chart.recallTitleShort")
+                                    :</b> <span id="y_recall">0</span>,
+                                    <b>@i18n.getMessage("evaluation.overview.chart.epoch")
+                                        :</b> <span id="x_recall">
+                                0</span></p>
                             </div>
                         </div>
-                            <!-- End Variance Table -->
+                        <!-- End Recall Chart-->
+
                     </div>
-                </div>
+
+
+
             </div><!-- End Content Span10-->
         </div><!--End Row Fluid-->
+
+
 
         <!-- Start JavaScript-->
         <script src="/assets/js/jquery-1.9.1.min.js"></script>
@@ -260,20 +226,21 @@
         <script src="/assets/js/jquery.sparkline.min.js"></script>
         <script src="/assets/js/counter.js"></script>
         <script src="/assets/js/retina.js"></script>
-        <script src="/assets/js/train/overview.js"></script>    <!-- Charts and tables are generated here! -->
+        <script src="/assets/js/evaluation/overview.js"></script>    <!--Evaluation charts and tables are generated
+        here! -->
         <script src="/assets/js/train/train.js"></script>   <!-- Common (lang selection, etc) -->
 
         <!-- Execute once on page load -->
         <script>
                 $(document).ready(function () {
-                    renderOverviewPage(true);
+                    renderEvaluationPage(true);
                 });
         </script>
 
             <!-- Execute periodically (every 2 sec) -->
         <script>
                 setInterval(function () {
-                    renderOverviewPage(false);
+                    renderEvaluationPage(false);
                 }, 2000);
         </script>
             <!-- End JavaScript-->

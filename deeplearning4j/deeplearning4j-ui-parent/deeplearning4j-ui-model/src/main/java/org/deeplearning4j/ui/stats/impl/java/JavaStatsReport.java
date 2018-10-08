@@ -16,11 +16,9 @@
 
 package org.deeplearning4j.ui.stats.impl.java;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.ToString;
+import lombok.*;
 import org.apache.commons.compress.utils.IOUtils;
+import org.deeplearning4j.eval.Evaluation;
 import org.deeplearning4j.ui.stats.api.Histogram;
 import org.deeplearning4j.ui.stats.api.StatsReport;
 import org.deeplearning4j.ui.stats.api.StatsType;
@@ -81,6 +79,15 @@ public class JavaStatsReport implements StatsReport {
     private boolean scorePresent;
     private boolean memoryUsePresent;
     private boolean performanceStatsPresent;
+
+    private Evaluation evalStats;
+    private boolean evalStatsPresent;
+    private double accuracy;
+    private double precision;
+    private double recall;
+    private double f1;
+    private List<String> labels;
+    private int[][] confusionMatrix;
 
     public JavaStatsReport() {
         //No-Arg constructor only for deserialization
@@ -316,6 +323,14 @@ public class JavaStatsReport implements StatsReport {
     public boolean hasDataSetMetaData() {
         return dataSetMetaData != null || metaDataClassName != null;
     }
+
+    @Override
+    public void reportEvalStats(Evaluation evalStats) {
+        this.evalStats = evalStats;
+    }
+
+
+
 
     @AllArgsConstructor
     @Data

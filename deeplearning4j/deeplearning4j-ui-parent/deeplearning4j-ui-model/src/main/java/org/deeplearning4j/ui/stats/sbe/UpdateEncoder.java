@@ -1303,7 +1303,7 @@ public class UpdateEncoder {
                 this.buffer = buffer;
                 actingVersion = SCHEMA_VERSION;
                 dimensions.wrap(buffer, parentMessage.limit());
-                dimensions.blockLength((int) 1);
+                dimensions.blockLength((int) 8);
                 dimensions.numInGroup((int) count);
                 index = -1;
                 this.count = count;
@@ -1349,6 +1349,232 @@ public class UpdateEncoder {
             }
 
         }
+    }
+
+    private final EvaluationEncoder evalStats = new EvaluationEncoder();
+
+    public EvaluationEncoder evalStats(final int count) {
+        evalStats.wrap(parentMessage, buffer, count);
+        return evalStats;
+    }
+
+
+
+    public static class EvaluationEncoder {
+        private static final int HEADER_SIZE = 4;
+        private final GroupSizeEncodingEncoder dimensions = new GroupSizeEncodingEncoder();
+        private UpdateEncoder parentMessage;
+        private MutableDirectBuffer buffer;
+        private static int blockLength = 8;
+        private int actingVersion;
+        private int count;
+        private int index;
+        private int offset;
+
+        public void wrap(final UpdateEncoder parentMessage, final MutableDirectBuffer buffer, final int count) {
+            if (count < 0 || count > 65534) {
+                throw new IllegalArgumentException("count outside allowed range: count=" + count);
+            }
+
+            this.parentMessage = parentMessage;
+            this.buffer = buffer;
+            actingVersion = SCHEMA_VERSION;
+            dimensions.wrap(buffer, parentMessage.limit());
+            dimensions.blockLength((int) 8);
+            dimensions.numInGroup((int) count);
+            this.count = count;
+            blockLength = 8;
+            parentMessage.limit(parentMessage.limit() + HEADER_SIZE);
+        }
+
+        public static int sbeHeaderSize() {
+            return HEADER_SIZE;
+        }
+
+        public static int sbeBlockLength() {
+            return blockLength;
+        }
+
+
+        public static int evalStatsId() {
+            return 3100;
+        }
+
+        public static String evalStatsCharacterEncoding() {
+            return "UTF-8";
+        }
+
+
+        public static int evalStatsHeaderLength() {
+            return 4;
+        }
+
+        public EvaluationEncoder putAccuracy(final double value) {
+            final int limit = parentMessage.limit();
+            buffer.putDouble(limit, value);
+            parentMessage.limit(limit + 8);
+            return this;
+        }
+
+        public EvaluationEncoder putPrecision(final double value) {
+            final int limit = parentMessage.limit();
+            buffer.putDouble(limit, value);
+            parentMessage.limit(limit + 8);
+            return this;
+        }
+
+        public EvaluationEncoder putRecall(final double value) {
+            final int limit = parentMessage.limit();
+            buffer.putDouble(limit, value);
+            parentMessage.limit(limit + 8);
+            return this;
+        }
+        public EvaluationEncoder putF1(final double value) {
+            final int limit = parentMessage.limit();
+            buffer.putDouble(limit, value);
+            parentMessage.limit(limit + 8);
+            return this;
+        }
+
+
+        private final LabelsNamesEncoder labelsEncoder = new LabelsNamesEncoder();
+
+        public LabelsNamesEncoder labelsNamesEncoder(final int length) {
+            labelsEncoder.wrap(parentMessage, buffer, length);
+            return labelsEncoder;
+        }
+
+
+        public static class LabelsNamesEncoder {
+            private static final int HEADER_SIZE = 4;
+            private final GroupSizeEncodingEncoder dimensions = new GroupSizeEncodingEncoder();
+            private UpdateEncoder parentMessage;
+            private MutableDirectBuffer buffer;
+            private int blockLength;
+            private int actingVersion;
+
+            public void wrap(final UpdateEncoder parentMessage, final MutableDirectBuffer buffer, final int length) {
+                if (length > 1073741824) {
+                    throw new IllegalArgumentException("length > max value for type: " + length);
+                }
+
+                this.parentMessage = parentMessage;
+                this.buffer = buffer;
+                actingVersion = SCHEMA_VERSION;
+                dimensions.wrap(buffer, parentMessage.limit());
+                dimensions.blockLength(0);
+                dimensions.numInGroup((int) 1);
+                blockLength = length;
+                parentMessage.limit(parentMessage.limit() + HEADER_SIZE);
+            }
+
+            public LabelsNamesEncoder putLabels(String labelsStr){
+                final byte[] bytes;
+                try {
+                    bytes = labelsStr.getBytes("UTF-8");
+                } catch (final java.io.UnsupportedEncodingException ex) {
+                    throw new RuntimeException(ex);
+                }
+
+                final int length = bytes.length;
+                if (length > 1073741824) {
+                    throw new IllegalArgumentException("length > max value for type: " + length);
+                }
+
+                final int headerLength = 4;
+                final int limit = parentMessage.limit();
+
+                buffer.putInt(limit, (int) length, java.nio.ByteOrder.LITTLE_ENDIAN);
+                buffer.putBytes(limit + headerLength, bytes, 0, length);
+                parentMessage.limit(limit + headerLength + length);
+                return this;
+            }
+
+            public static int sbeHeaderSize() {
+                return HEADER_SIZE;
+            }
+
+            public static int sbeBlockLength() {
+                return 0;
+            }
+
+            public static int labelNamesId() {
+                return 3110;
+            }
+
+            public static String labelNamesCharacterEncoding() {
+                return "UTF-8";
+            }
+
+            public static int labelNamesHeaderLength() {
+                return 4;
+            }
+
+        }
+
+
+        private final ConfusionMatrixEncoder confusionMatrixEncoder = new ConfusionMatrixEncoder();
+
+        public ConfusionMatrixEncoder confusionMatrixEncoder(final int count) {
+            confusionMatrixEncoder.wrap(parentMessage, buffer, count);
+            return confusionMatrixEncoder;
+        }
+
+
+        public static class ConfusionMatrixEncoder {
+            private static final int HEADER_SIZE = 4;
+            private final GroupSizeEncodingEncoder dimensions = new GroupSizeEncodingEncoder();
+            private UpdateEncoder parentMessage;
+            private MutableDirectBuffer buffer;
+            private int blockLength;
+            private int actingVersion;
+
+            public void wrap(final UpdateEncoder parentMessage, final MutableDirectBuffer buffer, final int count) {
+                if (count < 0 || count > 65534) {
+                    throw new IllegalArgumentException("count outside allowed range: count=" + count);
+                }
+
+                this.parentMessage = parentMessage;
+                this.buffer = buffer;
+                actingVersion = SCHEMA_VERSION;
+                dimensions.wrap(buffer, parentMessage.limit());
+                dimensions.blockLength(8);
+                dimensions.numInGroup(count);
+                blockLength = 8;
+                parentMessage.limit(parentMessage.limit() + HEADER_SIZE);
+            }
+
+            public ConfusionMatrixEncoder putMartix(int [][] matrix){
+                final int limit = parentMessage.limit();
+                int nClasses = matrix.length;
+                int counter = 0;
+
+                for(int i =0;i<nClasses;i++){
+                    for(int j =0;j<nClasses;j++){
+                        buffer.putInt(limit +(counter * 4),  matrix[i][j], java.nio.ByteOrder.LITTLE_ENDIAN);
+                        counter++;
+                    }
+                }
+
+                parentMessage.limit(limit + counter * 4);
+                return this;
+            }
+
+            public static int sbeHeaderSize() {
+                return HEADER_SIZE;
+            }
+
+            public static int sbeBlockLength() {
+                return 4;
+            }
+
+            public static int confusionMatrixId() { return 3120; }
+
+            public static int confusionMatrixHeaderLength() { return 4; }
+
+        }
+
+
     }
 
     public static int sessionIDId() {
@@ -1575,6 +1801,7 @@ public class UpdateEncoder {
 
         return this;
     }
+
 
     public static int dataSetMetaDataClassNameId() {
         return 1300;

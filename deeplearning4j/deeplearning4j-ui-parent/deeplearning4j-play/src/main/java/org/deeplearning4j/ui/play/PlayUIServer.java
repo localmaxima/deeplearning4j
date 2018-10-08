@@ -32,6 +32,7 @@ import org.deeplearning4j.ui.api.UIServer;
 import org.deeplearning4j.ui.i18n.DefaultI18N;
 import org.deeplearning4j.ui.i18n.I18NProvider;
 import org.deeplearning4j.ui.module.convolutional.ConvolutionalListenerModule;
+import org.deeplearning4j.ui.module.custom.CustomModule;
 import org.deeplearning4j.ui.module.defaultModule.DefaultModule;
 import org.deeplearning4j.ui.module.remote.RemoteReceiverModule;
 import org.deeplearning4j.ui.module.train.TrainModule;
@@ -149,9 +150,12 @@ public class PlayUIServer extends UIServer {
         uiModules.add(new TsneModule());
         remoteReceiverModule = new RemoteReceiverModule();
         uiModules.add(remoteReceiverModule);
+        //uiModules.add(new CustomModule());
 
         //Check service loader mechanism (Arbiter UI, etc) for modules
         modulesViaServiceLoader(uiModules);
+
+
 
         for (UIModule m : uiModules) {
             List<Route> routes = m.getRoutes();
@@ -354,7 +358,7 @@ public class PlayUIServer extends UIServer {
     @Override
     public void enableRemoteListener(StatsStorageRouter statsStorage, boolean attach) {
         remoteReceiverModule.setEnabled(true);
-        remoteReceiverModule.setStatsStorage(statsStorage);
+        remoteReceiverModule.setStatsStorageRouter(statsStorage);
         if (attach && statsStorage instanceof StatsStorage) {
             attach((StatsStorage) statsStorage);
         }
@@ -392,6 +396,7 @@ public class PlayUIServer extends UIServer {
             log.debug("PlayUIServer.StatsEventRouterRunnable started");
             //Idea: collect all event stats, and route them to the appropriate modules
             while (!shutdown.get()) {
+                log.debug("Inside while");
 
                 List<StatsStorageEvent> events = new ArrayList<>();
                 StatsStorageEvent sse = eventQueue.take(); //Blocking operation
@@ -399,7 +404,6 @@ public class PlayUIServer extends UIServer {
                 eventQueue.drainTo(events); //Non-blocking
 
                 for (UIModule m : uiModules) {
-
                     List<String> callbackTypes = m.getCallbackTypeIDs();
                     List<StatsStorageEvent> out = new ArrayList<>();
                     for (StatsStorageEvent e : events) {

@@ -31,6 +31,7 @@ import org.deeplearning4j.nn.conf.NeuralNetConfiguration;
 import org.deeplearning4j.nn.conf.graph.GraphVertex;
 import org.deeplearning4j.nn.conf.graph.LayerVertex;
 import org.deeplearning4j.nn.conf.layers.*;
+import org.deeplearning4j.nn.conf.layers.recurrent.LastTimeStep;
 import org.deeplearning4j.nn.weights.WeightInit;
 import org.deeplearning4j.ui.api.*;
 import org.deeplearning4j.ui.i18n.I18NProvider;
@@ -40,6 +41,7 @@ import org.deeplearning4j.ui.stats.api.Histogram;
 import org.deeplearning4j.ui.stats.api.StatsInitializationReport;
 import org.deeplearning4j.ui.stats.api.StatsReport;
 import org.deeplearning4j.ui.stats.api.StatsType;
+import org.deeplearning4j.ui.views.html.evaluation.EvaluationOverview;
 import org.deeplearning4j.ui.views.html.training.TrainingModel;
 import org.deeplearning4j.ui.views.html.training.TrainingOverview;
 import org.deeplearning4j.ui.views.html.training.TrainingSystem;
@@ -48,11 +50,9 @@ import org.nd4j.linalg.learning.config.IUpdater;
 import org.nd4j.linalg.primitives.Pair;
 import org.nd4j.linalg.primitives.Triple;
 import org.nd4j.shade.jackson.databind.ObjectMapper;
-import play.libs.Json;
 import play.mvc.Result;
 import play.mvc.Results;
 
-import java.io.File;
 import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
@@ -139,9 +139,11 @@ public class TrainModule implements UIModule {
                         () -> ok(String.valueOf(currentWorkerIdx)));
         Route r7a = new Route("/train/workers/setByIdx/:to", HttpMethod.GET, FunctionType.Function,
                         this::setWorkerByIdx);
+        Route rc = new Route("/evaluation/overview", HttpMethod.GET, FunctionType.Supplier,
+                () -> ok(EvaluationOverview.apply(I18NProvider.getInstance())));
 
 
-        return Arrays.asList(r, r2, r2a, r3, r3a, r3b, r4, r4a, r6, r6a, r6b, r6c, r6d, r7, r7a);
+        return Arrays.asList(r, r2, r2a, r3, r3a, r3b, r4, r4a, r6, r6a, r6b, r6c, r6d, r7, r7a, rc);
     }
 
     @Override
@@ -149,6 +151,7 @@ public class TrainModule implements UIModule {
         for (StatsStorageEvent sse : events) {
             if (StatsListener.TYPE_ID.equals(sse.getTypeID())) {
                 if (sse.getEventType() == StatsStorageListener.EventType.PostStaticInfo
+                        //TODO check duplicate if condition
                                 && StatsListener.TYPE_ID.equals(sse.getTypeID())) {
                     knownSessionIDs.put(sse.getSessionID(), sse.getStatsStorage());
                 }
@@ -391,11 +394,24 @@ public class TrainModule implements UIModule {
 
         List<Integer> scoresIterCount = new ArrayList<>();
         List<Double> scores = new ArrayList<>();
+        //Evaluation stats
+        List<Integer> epochs = new ArrayList<>();
+        List<Double> accuracies = new ArrayList<>();
+        List<Double> precisions = new ArrayList<>();
+        List<Double> recalls = new ArrayList<>();
+        List<Double> f1s = new ArrayList<>();
+
+
 
         Map<String, Object> result = new HashMap<>();
         result.put("updateTimestamp", lastUpdate);
         result.put("scores", scores);
         result.put("scoresIter", scoresIterCount);
+        result.put("accuracies", accuracies);
+        result.put("precisions", precisions);
+        result.put("recalls", recalls);
+        result.put("f1s", f1s);
+        result.put("epoch", epochs);
 
         //Get scores info
         long[] allTimes = (noData ? null : ss.getAllUpdateTimes(currentSessionID, StatsListener.TYPE_ID, wid));
@@ -489,9 +505,12 @@ public class TrainModule implements UIModule {
             }
 
             int pCount = -1;
+            int epochCount = -1;
             int lastUpdateIdx = updates.size() - 1;
             for (Persistable u : updates) {
                 pCount++;
+
+
                 if (!(u instanceof StatsReport))
                     continue;
 
@@ -515,6 +534,17 @@ public class TrainModule implements UIModule {
                     scores.add(lastScore);
                 } else {
                     scores.add(NAN_REPLACEMENT_VALUE);
+                }
+
+                //Accuracy
+                System.out.println("#PRESENT"+ last.isEvalStatsPresent());
+                if(last.isEvalStatsPresent()){
+                    epochCount++;
+                    epochs.add(epochCount);
+                    accuracies.add(last.getAccuracy());
+                    precisions.add(last.getPrecision());
+                    recalls.add(last.getRecall());
+                    f1s.add(last.getF1());
                 }
 
 
@@ -1543,6 +1573,7 @@ public class TrainModule implements UIModule {
         addAll(files, "train.model", langs);
         addAll(files, "train.overview", langs);
         addAll(files, "train.system", langs);
+        addAll(files, "evaluation", langs);
         return files;
     }
 
@@ -1551,4 +1582,5 @@ public class TrainModule implements UIModule {
             to.add(new I18NResource("dl4j_i18n/" + prefix + "." + s));
         }
     }
+
 }

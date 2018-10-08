@@ -17,6 +17,7 @@
 package org.deeplearning4j.ui.stats.api;
 
 import org.deeplearning4j.api.storage.Persistable;
+import org.deeplearning4j.eval.Evaluation;
 import org.deeplearning4j.ui.stats.StatsListener;
 import org.nd4j.linalg.primitives.Pair;
 
@@ -321,4 +322,22 @@ public interface StatsReport extends Persistable {
      * @return True if DataSet metadata is present
      */
     boolean hasDataSetMetaData();
+
+    void reportEvalStats(Evaluation evalStats);
+
+    boolean isEvalStatsPresent();
+
+    double getAccuracy();
+
+    double getPrecision();
+
+    double getRecall();
+
+    double getF1();
+
+    List<String> getLabels();
+
+    int [][] getConfusionMatrix();
+
+
 }
