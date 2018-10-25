@@ -143,7 +143,7 @@ public class TrainModule implements UIModule {
                 () -> ok(EvaluationOverview.apply(I18NProvider.getInstance())));
 
 
-        return Arrays.asList(r, r2, r2a, r3, r3a, r3b, r4, r4a, r6, r6a, r6b, r6c, r6d, r7, r7a, rc);
+        return Arrays.asList(r, r2, r2a, r3, r3a, r3b, r4, r4a, r6, r6a, r6b, r6c, r6d, r7, r7a ,rc);
     }
 
     @Override
@@ -536,8 +536,7 @@ public class TrainModule implements UIModule {
                     scores.add(NAN_REPLACEMENT_VALUE);
                 }
 
-                //Accuracy
-                System.out.println("#PRESENT"+ last.isEvalStatsPresent());
+                //Evaluation stats
                 if(last.isEvalStatsPresent()){
                     epochCount++;
                     epochs.add(epochCount);
